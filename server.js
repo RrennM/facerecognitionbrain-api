@@ -2,9 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const app = express();
-// app.use(bodyParser.json());
-app.use(express.urlencoded({extended: false}));
-app.use(express.json());
+app.use(bodyParser.json());
 
 const database = {
     users: [
@@ -28,7 +26,7 @@ const database = {
 }
 
 app.get('/', (req, res) => {
-    res.send('This is working!')
+    res.send(database.users)
 });
 
 app.post('/signin', (req, res) => {
@@ -39,6 +37,19 @@ app.post('/signin', (req, res) => {
         res.status(404).json('Error logging in.')
     }
 });
+
+app.post('/register', (req, res) => {
+    const { email, name, password } = req.body;
+    database.users.push({   
+        id: database.users.length + 1,
+        name: name,
+        email: email,
+        password: password,
+        entries: 0,
+        joined: new Date()
+    })
+    res.json(database.users[database.users.length - 1]);
+})
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000!")
