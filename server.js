@@ -55,7 +55,7 @@ app.get('/profile/:id', (req, res) => {
     const { id } = req.params;
     let found = false;
     database.users.forEach(user => {
-        console.log(typeof user.id, user.id, typeof id, id);
+        // console.log(typeof user.id, user.id, typeof id, id);
         if ( user.id.toString() === id ) {
             found = true;
             return res.json(user);
@@ -67,15 +67,23 @@ app.get('/profile/:id', (req, res) => {
     }
 })
 
+app.post('/image', (req, res) => {
+    const { id } = req.body;
+    let found = false;
+    database.users.forEach(user => {
+        console.log(typeof user.id, user.id, typeof id, id);
+        if ( user.id === id ) {
+            found = true;
+            user.entries++;
+            return res.json(user.entries);
+        } 
+    })
+
+    if ( !found ) {
+        res.status(404).json('No such user.');
+    }
+})
+
 app.listen(3000, () => {
     console.log("Server is running on port 3000!")
 });
-
-/*
-/ --> res = this is working!
-/signin --> POST = success/fail
-/register --> POST = user
-/profile/userid -- > GET = user
-/image --> PUT = updated user object or count
-
-*/
