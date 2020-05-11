@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-// const bcrypt = require('bcrypt-nodejs');
+const bcrypt = require('bcrypt-nodejs');
 const cors = require('cors');
 const knex = require('knex');
 
@@ -44,7 +44,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/signin', (req, res) => {
-    // Load hash from your password DB.
+    // Load hash from your password DB Asychronously.
     // bcrypt.compare("muffins", '$2a$10$40ZFW.CIdnlB15xSir77sOqBBABBMfRZM2v1rUOVFscRHdxkyu03G', function(err, res) {
     //     // res == true
     //     console.log( 'first guess', res )
@@ -65,9 +65,14 @@ app.post('/signin', (req, res) => {
 
 app.post('/register', (req, res) => {
     const { email, name, password } = req.body;
+    // Asynchronous
     // bcrypt.hash(password, null, null, function(err, hash) {
     //     console.log(hash)
     // });
+    
+    // Synchronous
+    const hash = bcrypt.hashSync(password);
+
     // database.users.push({   
     //     id: database.users.length + 1,
     //     name: name,
@@ -75,17 +80,29 @@ app.post('/register', (req, res) => {
     //     entries: 0,
     //     joined: new Date()
     // })
-    db('users')
-        .returning('*')
-        .insert({
-            email: email,
-            name: name,
-            joined: new Date()
+    db.transaction(trx => {
+        trx.insert({
+            hash: hash,
+            email: email
         })
-        .then(user => {
-            res.json(user[0]);
+        .into('login')
+        .returning('email')
+        .then(loginEmail => {
+            return trx('users')
+                .returning('*')
+                .insert({
+                    email: loginEmail[0],
+                    name: name,
+                    joined: new Date()
+                })
+                .then(user => {
+                    res.json(user[0]);
+                })
         })
-        .catch(err => res.status(400).json('Unable to register.'));
+        .then(trx.commit)
+        .catch(trx.rollback)
+    })    
+    .catch(err => res.status(400).json('Unable to register.'));
 })
 
 app.get('/profile/:id', (req, res) => {
@@ -120,7 +137,7 @@ app.put('/image', (req, res) => {
     //     console.log(typeof user.id, user.id, typeof id, id);
     //     if ( user.id === id ) {
     //         found = true;
-    //         user.entries++;
+    //         user++;
     //         return res.json(user.entries);
     //     } 
     // })
