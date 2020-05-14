@@ -24,7 +24,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.get('/', (req, res) => { res.send(database.users) });
-app.post('/signin', signin.handleSignin(db, bcrypt));
+app.post('/signin', signin.handleSignin(db, bcrypt)); // Set up as advanced JS function (See vid 311).
 app.post('/register', (req, res) => { register.handleRegister(req, res, db, bcrypt) })
 app.get('/profile/:id', (req, res) => { profileId.handleProfile(req, res, db)})
 app.put('/image', (req, res) => { image.handleImage(req, res, db) })
